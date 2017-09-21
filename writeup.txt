@@ -1,0 +1,103 @@
+1. Rangkuman
+Dalam tutorial kali ini, Saya telah belajar lebih dalam tentang Java Spring framework, saya berhasil memaksimalkan model MVC nya dengan menambahkan model, controller, dan view nya serta juga menambahkan service nya dimana saya bisa berinteraksi dengan database. Untuk saat ini memang kita belum memakai basis data yang canggih, hanya menggunakan in memory database, yang setiap kali aplikasi dihentikan akan hilang datanya. Saya belajar bagaimana memanipulasi data sedemikian rupa (Add, Select, Delete) hingga menampilkan datanya.
+
+2. Jawaban Pertanyaan: (Setiap pertanyaan memiliki gambar pendukung yang dapat dilihat di folder Pendukung/Pendukung_{Nomor Pertanyaan}.png)
+  1. Hasilnya sesuai harapan, karena semua parameter diberikan, maka data berhasil dimasukkan.
+  2. Terjadi error, parameter tidak lengkap, parameter GPA yang di required oleh sistem tidak diberikan oleh user, menyebabkan server mengembalikan respon 400 Bad Request
+  3. Student berhasil muncul, student yang baru saja ditambahkan berhasil dimunculkan.
+  4. Terjadi error, hal ini terjadi karena student yang dicari tidak ditemukan, meskipun tadi kita sudah menambahkan usernya, karena basis data yang digunakan merupakan in memory database, maka ketika aplikasi di restart, semua data hilang, alhasil ketika dicari maka data tidak ada dan menjadikan adanya error.
+  5. Ya, student yang baru ditambahkan muncul di halaman viewall.
+  6. Ya, student yang baru ditambahkan dan student sebelumnya muncul semua di halaman viewall.
+
+3. Method selectStudent hasil implementasi saya: (Gambar pendukung di Pendukung/Pendukung_Latihan_1_*.png)
+    // InMemoryStudentService.java
+    // require NPM as a parameter.
+    public StudentModel selectStudent(String npm) {
+      // Iterate through the current students list
+      for (StudentModel currentStudent : studentList) {
+        // check if the current iteration's student npm exist and match the npm in the parameter
+        if (currentStudent.getNpm() != null && currentStudent.getNpm().equals(npm)) {
+          // if it matches, it is the same student, return the student immediately.
+          return currentStudent;
+        }
+      }
+
+      // if there is no returned value during the iteration,
+      // it means that there is no matching student
+      return null;
+    }
+
+    // StudentController.java
+    // Map all url request from /student/view/{path_variable}
+    @RequestMapping(value = {"/student/view", "/student/view/{npm}"})
+    public String viewByPath(Model model, @PathVariable Optional<String> npm) {
+      // check if path variable is given
+      if (npm.isPresent()) {
+        // call the selectStudent function to find the student
+        StudentModel student = studentService.selectStudent(npm.get());
+
+        // if the student exist
+        if (student != null) {
+          // pass down the student variable and return the "view" view
+          model.addAttribute("student", student);
+          return "view";
+        }
+
+        // return view for given path variable but no matching student in the database
+        return "viewnotfound";
+      }
+
+      // return view for no given path variable a.k.a empty data view
+      return "viewempty";
+    }
+
+4. Method delete hasil implementasi saya: (Gambar pendukung di Pendukung/Pendukung_Latihan_2_*.png)
+    // InMemoryStudentService.java
+    // require NPM as a parameter.
+    public void deleteStudent(String npm) {
+      // Initiate an Iterator for the current studentList
+      Iterator<StudentModel> studentListIterator = studentList.iterator();
+
+      // Iterate
+      while (studentListIterator.hasNext()) {
+        // Get current iteration value
+        StudentModel currentStudent = studentListIterator.next();
+
+        // check if the current iteration is the one we want to delete
+        if (currentStudent.getNpm().equals(npm)) {
+          // bingo, remove the current iteration item
+          studentListIterator.remove();
+        }
+      }
+    }
+
+    // StudentController.java
+    // Map all url request from /student/view/{path_variable}
+    @RequestMapping(value = {"/student/delete", "/student/delete/{npm}"})
+    public String delete(Model model, @PathVariable Optional<String> npm) {
+      // check if path variable is given
+      if (npm.isPresent()) {
+        // call the selectStudent function to find the student
+        StudentModel student = studentService.selectStudent(npm.get());
+
+        // if the student exist
+        if (student != null) {
+          // delete the student from database
+          studentService.deleteStudent(student.getNpm());
+          // pass down the student data and render the delete view
+          model.addAttribute("student", student);
+          return "delete";
+        }
+
+        // return view for given path variable but no matching student in the database
+        return "deletenotfound";
+      }
+
+      // return view for no given path variable a.k.a empty data view
+      return "deleteempty";
+    }
+
+Berikut adalah writeup saya, terimakasih.
+
+Kenny Reida Dharmawan,
+1506757472 - APAP C.
